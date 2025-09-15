@@ -1,0 +1,132 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function hasValidUserRole() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    // Users collection - users can only read/write their own data
+    match /users/{userId} {
+      allow read, write: if isAuthenticated() && isOwner(userId);
+    }
+
+    // User API keys - users can only access their own API keys  
+    match /user_api_keys/{keyId} {
+      allow read, write: if isAuthenticated() && 
+        isOwner(resource.data.userId);
+    }
+
+    // Chats collection - users can only access their own chats
+    match /chats/{chatId} {
+      allow read, write: if isAuthenticated() && 
+        isOwner(resource.data.userId);
+      
+      // Allow read for public shared chats
+      allow read: if resource.data.public == true;
+      
+      // Allow creating new chats
+      allow create: if isAuthenticated() && 
+        isOwner(request.resource.data.userId);
+    }
+
+    // Messages collection - users can only access messages from their own chats
+    match /messages/{messageId} {
+      allow read, write: if isAuthenticated() && 
+        isOwner(resource.data.userId);
+      
+      // Allow read for messages in public shared chats
+      allow read: if isAuthenticated() && 
+        exists(/databases/$(database)/documents/chats/$(resource.data.chatId)) &&
+        get(/databases/$(database)/documents/chats/$(resource.data.chatId)).data.public == true;
+      
+      // Allow creating new messages
+      allow create: if isAuthenticated() && 
+        isOwner(request.resource.data.userId) &&
+        exists(/databases/$(database)/documents/chats/$(request.resource.data.chatId)) &&
+        get(/databases/$(database)/documents/chats/$(request.resource.data.chatId)).data.userId == request.auth.uid;
+    }
+
+    // Chat attachments - users can only access attachments from their own chats
+    match /chat_attachments/{attachmentId} {
+      allow read, write: if isAuthenticated() && 
+        isOwner(resource.data.userId);
+      
+      // Allow creating new attachments
+      allow create: if isAuthenticated() && 
+        isOwner(request.resource.data.userId);
+    }
+
+    // Feedback collection - users can only read/write their own feedback
+    match /feedback/{feedbackId} {
+      allow read, write: if isAuthenticated() && 
+        isOwner(resource.data.userId);
+        
+      // Allow creating new feedback
+      allow create: if isAuthenticated() && 
+        isOwner(request.resource.data.userId);
+    }
+
+    // Usage history - users can only read their own usage history
+    match /usage_history/{historyId} {
+      allow read: if isAuthenticated() && 
+        isOwner(resource.data.userId);
+      
+      // Only allow server-side writes for usage tracking
+      allow write: if false;
+    }
+
+    // Connectors - users can only access their own connectors
+    match /connectors/{connectorId} {
+      allow read, write: if isAuthenticated() && 
+        isOwner(resource.data.userId);
+        
+      // Allow creating new connectors
+      allow create: if isAuthenticated() && 
+        isOwner(request.resource.data.userId);
+    }
+
+    // Scheduled tasks - users can only access their own tasks
+    match /scheduled_tasks/{taskId} {
+      allow read, write: if isAuthenticated() && 
+        isOwner(resource.data.userId);
+        
+      // Allow creating new tasks
+      allow create: if isAuthenticated() && 
+        isOwner(request.resource.data.userId);
+    }
+
+    // Task history - users can only read task history for their own tasks
+    match /task_history/{historyId} {
+      allow read: if isAuthenticated() && 
+        isOwner(resource.data.userId);
+      
+      // Only allow server-side writes for task execution tracking
+      allow write: if false;
+    }
+
+    // Rate limiting data - only server-side access
+    match /rate_limits/{userId} {
+      allow read, write: if false;
+    }
+
+    // System collections (if needed) - admin only
+    match /system/{document=**} {
+      allow read, write: if false;
+    }
+
+    // Default deny rule for any other documents
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

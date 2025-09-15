@@ -16,7 +16,7 @@ import { AuthGuard } from './components/auth/auth-guard';
 import LayoutApp from './components/layout/layout-app';
 import { StructuredData } from './components/structured-data';
 import { LayoutClient } from './layout-client';
-import { ConvexClientProvider } from './providers/convex-client-provider';
+import { FirebaseClientProvider } from './providers/firebase-client-provider';
 import { SidebarProvider } from './providers/sidebar-provider';
 
 const geistSans = Geist({
@@ -132,8 +132,6 @@ export const metadata: Metadata = {
   },
 };
 
-import { ConvexAuthNextjsServerProvider } from '@convex-dev/auth/nextjs/server';
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -164,17 +162,15 @@ export default function RootLayout({
           )}
         <LayoutClient />
         <TooltipProvider>
-          <ConvexAuthNextjsServerProvider>
-            <ConvexClientProvider>
-              <AuthGuard>
-                <SidebarProvider>
-                  <LayoutApp>{children}</LayoutApp>
-                </SidebarProvider>
-                <Analytics />
-                <SpeedInsights />
-              </AuthGuard>
-            </ConvexClientProvider>
-          </ConvexAuthNextjsServerProvider>
+          <FirebaseClientProvider>
+            <AuthGuard>
+              <SidebarProvider>
+                <LayoutApp>{children}</LayoutApp>
+              </SidebarProvider>
+              <Analytics />
+              <SpeedInsights />
+            </AuthGuard>
+          </FirebaseClientProvider>
         </TooltipProvider>
       </body>
     </html>
