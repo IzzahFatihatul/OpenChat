@@ -27,6 +27,7 @@ import { firestore } from '@/lib/firebase/config';
 
 // Type definitions for our collections
 export interface User {
+  id: string; // Firestore document ID (same as uid)
   uid: string;
   name?: string;
   image?: string;
@@ -150,7 +151,7 @@ export class FirestoreService {
       ...data,
       createdAt: now,
       updatedAt: now,
-    };
+    } as any;
 
     if (data.id) {
       await setDoc(this.getDoc(collectionName, data.id), docData);

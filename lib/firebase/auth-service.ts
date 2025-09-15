@@ -50,27 +50,27 @@ export class AuthService {
     const existingUser = await firestoreService.read<User>('users', firebaseUser.uid);
     
     const userData: User = {
+      id: firebaseUser.uid,
       uid: firebaseUser.uid,
-      name: firebaseUser.displayName || undefined,
-      email: firebaseUser.email || undefined,
-      image: firebaseUser.photoURL || undefined,
-      emailVerificationTime: firebaseUser.emailVerified ? now : undefined,
+      name: firebaseUser.displayName || existingUser?.name,
+      email: firebaseUser.email || existingUser?.email,
+      image: firebaseUser.photoURL || existingUser?.image,
+      emailVerificationTime: firebaseUser.emailVerified ? now : existingUser?.emailVerificationTime,
       isAnonymous: false,
       createdAt: existingUser?.createdAt || now,
       updatedAt: now,
       // Preserve existing user preferences
-      ...existingUser,
-      // Update with latest auth data
-      name: firebaseUser.displayName || existingUser?.name,
-      email: firebaseUser.email || existingUser?.email,
-      image: firebaseUser.photoURL || existingUser?.image,
+      preferredModel: existingUser?.preferredModel,
+      preferredName: existingUser?.preferredName,
+      occupation: existingUser?.occupation,
+      traits: existingUser?.traits,
+      about: existingUser?.about,
+      disabledModels: existingUser?.disabledModels,
+      favoriteModels: existingUser?.favoriteModels,
     };
 
-    // Use set with merge to create or update
-    await firestoreService.create<User>('users', {
-      ...userData,
-      id: firebaseUser.uid,
-    });
+    // Use create with ID to create or update
+    await firestoreService.create<User>('users', userData);
 
     return userData;
   }

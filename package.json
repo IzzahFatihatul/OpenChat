@@ -58,6 +58,7 @@
     "dompurify": "^3.2.6",
     "exa-js": "^1.9.3",
     "firebase": "^12.2.1",
+    "firebase-admin": "^13.5.0",
     "framer-motion": "^12.23.12",
     "jsdom": "^26.1.0",
     "katex": "^0.16.22",

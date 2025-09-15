@@ -8,9 +8,9 @@ import {
   useSignOut,
   useUpdateUserProfile 
 } from '@/lib/firebase/hooks';
-import type { User } from '@/lib/firebase/firestore-service';
+import { firebaseUserToConvex, type ConvexUser, type ConvexConnector } from '@/lib/firebase/compat';
 
-export type UserProfile = User;
+export type UserProfile = ConvexUser;
 
 export type ApiKey = {
   id: string;
@@ -21,14 +21,7 @@ export type ApiKey = {
   updatedAt?: number;
 };
 
-export type Connector = {
-  id: string;
-  userId: string;
-  type: string;
-  isConnected: boolean;
-  createdAt: number;
-  updatedAt: number;
-};
+export type Connector = ConvexConnector;
 
 type UserContextType = {
   user: UserProfile | null;
@@ -136,7 +129,7 @@ export function UserProvider({
 
   const contextValue = useMemo(
     () => ({
-      user,
+      user: user ? firebaseUserToConvex(user) : null,
       isLoading: combinedLoading,
       signInGoogle,
       signOut,
